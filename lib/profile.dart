@@ -1,3 +1,4 @@
+import 'package:chat_app/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class Profile extends StatelessWidget {
@@ -5,6 +6,24 @@ class Profile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          actions: <Widget>[
+            IconButton(
+              onPressed: () {
+                AuthService().signOut();
+              },
+              icon: const Icon(Icons.logout),
+            ),
+          ],
+        ),
+        body: const Column(
+          children: <Widget>[
+            Text("data"),
+          ],
+        ),
+      ),
+    );
   }
 }
