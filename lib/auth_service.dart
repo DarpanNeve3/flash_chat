@@ -1,4 +1,4 @@
-import 'package:chat_app/profile.dart';
+import 'package:chat_app/chat_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -15,7 +15,7 @@ class AuthService {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
         if (snapshot.hasData) {
-          return const Profile();
+          return ChatList();
         } else {
           return const LoginPage();
         }
@@ -39,7 +39,6 @@ class AuthService {
         accessToken: googleAuth?.accessToken,
         idToken: googleAuth?.idToken,
       );
-
       // Once signed in, return the UserCredential
       return await FirebaseAuth.instance.signInWithCredential(credential);
     } else {
@@ -61,16 +60,17 @@ class AuthService {
     print("User is signed out.");
   }
 
-  createUserWithEmailAndPassword(
-      String emailAddress, String password, BuildContext context) async {
+  createUserWithEmailAndPassword(String name, String emailAddress,
+      String password, BuildContext context) async {
     try {
       final credential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailAddress,
         password: password,
       );
+
       signInWithEmailAndPassword(emailAddress, password);
-      addUserDataToFirestore(credential.user?.displayName,emailAddress);
+      addUserDataToFirestore(name, emailAddress);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         print('The password provided is too weak.');
@@ -95,9 +95,12 @@ class AuthService {
     }
   }
 
-  addUserDataToFirestore(String? name,String email) async {
+  addUserDataToFirestore(String? name, String email) async {
     FirebaseAuth _auth = FirebaseAuth.instance;
     FirebaseFirestore _firestore = FirebaseFirestore.instance;
-    await _firestore.collection("users").doc(_auth.currentUser?.uid).set({"name":name,"email":email,"status":"unavailable"});
+    await _firestore
+        .collection("users")
+        .doc(_auth.currentUser?.uid)
+        .set({"name": name, "email": email, "status": "unavailable"});
   }
 }

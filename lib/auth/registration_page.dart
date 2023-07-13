@@ -5,6 +5,8 @@ import 'login_page.dart';
 var _confirmPass = TextEditingController();
 var _pass = TextEditingController();
 var _email = TextEditingController();
+var _name = TextEditingController();
+
 class RegistrationPage extends StatelessWidget {
    RegistrationPage({super.key});
   bool passEncrypted = true;
@@ -23,7 +25,6 @@ class RegistrationPage extends StatelessWidget {
               const SizedBox(
                 height: 60,
               ),
-
               const SizedBox(
                 height: 25,
               ),
@@ -31,7 +32,7 @@ class RegistrationPage extends StatelessWidget {
                 elevation: 20,
                 child: Container(
                   width: 344,
-                  height: 500,
+                  height: 600,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(11),
                       //   color: const Color(0xFFD9D9D9),
@@ -68,6 +69,20 @@ class RegistrationPage extends StatelessWidget {
                       const SizedBox(
                         height: 25,
                       ),
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: TextField(
+                          controller: _name,
+                          decoration: const InputDecoration(
+                            hintText: 'Name',
+                            prefixIcon: Icon(Icons.email),
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 25,
+                      ),
                       const PasswordButton1(),
                       const PasswordButton2(),
                       const SizedBox(
@@ -86,7 +101,7 @@ class RegistrationPage extends StatelessWidget {
                       GestureDetector(
                         onTap: () async {
                           if(_pass.text==_confirmPass.text ){
-                            await AuthService().createUserWithEmailAndPassword(_email.text,_pass.text,context);
+                            await AuthService().createUserWithEmailAndPassword(_name.text,_email.text,_pass.text,context);
                             Navigator.pop(context);
                           }
                           else{
