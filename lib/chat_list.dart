@@ -11,7 +11,43 @@ class ChatList extends StatefulWidget {
   State<ChatList> createState() => _ChatListState();
 }
 
-class _ChatListState extends State<ChatList> {
+class _ChatListState extends State<ChatList> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    setStatus("Online");
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    setStatus("Offline");
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void setStatus(String status) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    FirebaseAuth auth = FirebaseAuth.instance;
+    await firestore.collection('users').doc(auth.currentUser!.uid).update(
+      {
+        "status": status,
+      },
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      setStatus("Online");
+    } else if (state == AppLifecycleState.paused ) {
+      setStatus("Offline");
+    }
+  }
+
   final User? _user = FirebaseAuth.instance.currentUser;
   List<Map<String, dynamic>> allUsers = [];
   final _search = TextEditingController();
@@ -44,7 +80,10 @@ class _ChatListState extends State<ChatList> {
 
   void fetchAllUsers() async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
-    QuerySnapshot querySnapshot = await firestore.collection("users").where("email",isNotEqualTo: _user!.email).get();
+    QuerySnapshot querySnapshot = await firestore
+        .collection("users")
+        .where("email", isNotEqualTo: _user!.email)
+        .get();
     List<Map<String, dynamic>> fetchedUsers = querySnapshot.docs
         .map((doc) => doc.data() as Map<String, dynamic>)
         .toList();
@@ -113,20 +152,19 @@ class _ChatListState extends State<ChatList> {
                         child: ListTile(
                           leading: const Icon(Icons.person),
                           tileColor: Colors.grey[200],
-                          minLeadingWidth: 200,
                           title: Text(
                               "${allUsers[index]["name"]}\n${allUsers[index]["email"]}"),
                           subtitle: Text(allUsers[index]["status"]),
                           trailing: ElevatedButton(
                             onPressed: () {
                               setState(() {
-                                roomId = chatRoomId(
-                                    _user?.displayName, allUsers[index]["name"]);
+                                roomId = chatRoomId(_user?.displayName,
+                                    allUsers[index]["name"]);
                               });
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      IndividualChat(roomId: roomId,userMap: allUsers[index]),
+                                  builder: (context) => IndividualChat(
+                                      roomId: roomId, userMap: allUsers[index]),
                                 ),
                               );
                             },

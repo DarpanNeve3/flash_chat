@@ -328,6 +328,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.7"
+  lifecycle:
+    dependency: "direct main"
+    description:
+      name: lifecycle
+      sha256: "460440bf148efc9a01f52b08758b7c6fd1d0d60beb7c2fb1cc714823508094b9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.0"
   lints:
     dependency: transitive
     description:

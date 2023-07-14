@@ -61,9 +61,10 @@ class IndividualChat extends StatelessWidget {
                         ? Alignment.centerRight
                         : Alignment.centerLeft,
                     child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-                      margin:const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 14),
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 5, horizontal: 8),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(15),
                         color: Colors.blue,
@@ -94,6 +95,9 @@ class IndividualChat extends StatelessWidget {
                 children: [
                   Expanded(
                     child: TextField(
+                      onSubmitted: (value) {
+                        sendMessage();
+                      },
                       controller: _message,
                       decoration: const InputDecoration(
                         hintText: 'Type a message',
