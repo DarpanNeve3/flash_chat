@@ -12,9 +12,10 @@ class ChatList extends StatefulWidget {
 }
 
 class _ChatListState extends State<ChatList> {
-  User? user = FirebaseAuth.instance.currentUser;
+  final User? _user = FirebaseAuth.instance.currentUser;
   List<Map<String, dynamic>> allUsers = [];
   final _search = TextEditingController();
+  late String roomId;
 
   String chatRoomId(String? user1, String user2) {
     if (user1!.toLowerCase().codeUnits[0] > user2.toLowerCase().codeUnits[0]) {
@@ -43,7 +44,7 @@ class _ChatListState extends State<ChatList> {
 
   void fetchAllUsers() async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
-    QuerySnapshot querySnapshot = await firestore.collection("users").get();
+    QuerySnapshot querySnapshot = await firestore.collection("users").where("email",isNotEqualTo: _user!.email).get();
     List<Map<String, dynamic>> fetchedUsers = querySnapshot.docs
         .map((doc) => doc.data() as Map<String, dynamic>)
         .toList();
@@ -118,12 +119,14 @@ class _ChatListState extends State<ChatList> {
                           subtitle: Text(allUsers[index]["status"]),
                           trailing: ElevatedButton(
                             onPressed: () {
-                              String roomid = chatRoomId(
-                                  user?.displayName, allUsers[index]["name"]);
+                              setState(() {
+                                roomId = chatRoomId(
+                                    _user?.displayName, allUsers[index]["name"]);
+                              });
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      IndividualChat(roomId: roomid),
+                                      IndividualChat(roomId: roomId,userMap: allUsers[index]),
                                 ),
                               );
                             },

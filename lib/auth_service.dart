@@ -15,7 +15,11 @@ class AuthService {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
         if (snapshot.hasData) {
-          return ChatList();
+          if(FirebaseAuth.instance.currentUser!.metadata.creationTime==FirebaseAuth.instance.currentUser!.metadata.lastSignInTime){
+            FirebaseAuth _auth = FirebaseAuth.instance;
+            addUserDataToFirestore(_auth.currentUser!.displayName,_auth.currentUser!.email );
+          }
+          return const ChatList();
         } else {
           return const LoginPage();
         }
@@ -70,7 +74,6 @@ class AuthService {
       );
 
       signInWithEmailAndPassword(emailAddress, password);
-      addUserDataToFirestore(name, emailAddress);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         print('The password provided is too weak.');
@@ -95,7 +98,7 @@ class AuthService {
     }
   }
 
-  addUserDataToFirestore(String? name, String email) async {
+  addUserDataToFirestore(String? name, String? email) async {
     FirebaseAuth _auth = FirebaseAuth.instance;
     FirebaseFirestore _firestore = FirebaseFirestore.instance;
     await _firestore
