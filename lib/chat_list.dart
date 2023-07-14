@@ -1,5 +1,8 @@
+import 'dart:html';
+
 import 'package:chat_app/auth_service.dart';
 import 'package:chat_app/individual_chat.dart';
+import 'package:chat_app/widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -12,23 +15,42 @@ class ChatList extends StatefulWidget {
 }
 
 class _ChatListState extends State<ChatList> with WidgetsBindingObserver {
+  late final AppLifecycleState appLifecycleState;
+  final User? _user = FirebaseAuth.instance.currentUser;
+  List<Map<String, dynamic>> allUsers = [];
+  final _search = TextEditingController();
+  late String roomId;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    setStatus("Online");
+    setStatus("started");
   }
 
   @override
-  void dispose() {
+  void dispose() async{
     // TODO: implement dispose
-    setStatus("Offline");
     WidgetsBinding.instance.removeObserver(this);
+    if (_user!=null) {
+      await setStatus("dispose");
+    }
+    print("dispose is working");
+
     super.dispose();
   }
-
-  void setStatus(String status) async {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    super.didChangeAppLifecycleState(state);
+    appLifecycleState = state;
+    if (state == AppLifecycleState.resumed) {
+      await setStatus("resumed");
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      await setStatus("paused");
+    }
+  }
+  setStatus(String status) async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     FirebaseAuth auth = FirebaseAuth.instance;
     await firestore.collection('users').doc(auth.currentUser!.uid).update(
@@ -37,22 +59,6 @@ class _ChatListState extends State<ChatList> with WidgetsBindingObserver {
       },
     );
   }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed) {
-      setStatus("Online");
-    } else if (state == AppLifecycleState.paused ) {
-      setStatus("Offline");
-    }
-  }
-
-  final User? _user = FirebaseAuth.instance.currentUser;
-  List<Map<String, dynamic>> allUsers = [];
-  final _search = TextEditingController();
-  late String roomId;
-
   String chatRoomId(String? user1, String user2) {
     if (user1!.toLowerCase().codeUnits[0] > user2.toLowerCase().codeUnits[0]) {
       return "$user1$user2";
@@ -60,7 +66,6 @@ class _ChatListState extends State<ChatList> with WidgetsBindingObserver {
       return "$user2$user1";
     }
   }
-
   void search() async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     QuerySnapshot querySnapshot = await firestore
@@ -97,14 +102,13 @@ class _ChatListState extends State<ChatList> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: const Text("Users List"),
           actions: <Widget>[
             IconButton(
               onPressed: () {
-                AuthService().signOut();
+                AuthService().signOut(context);
               },
               icon: const Icon(Icons.logout),
             ),
@@ -179,7 +183,6 @@ class _ChatListState extends State<ChatList> with WidgetsBindingObserver {
             ],
           ),
         ),
-      ),
     );
   }
 }

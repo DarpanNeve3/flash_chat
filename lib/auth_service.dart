@@ -1,4 +1,5 @@
 import 'package:chat_app/chat_list.dart';
+import 'package:chat_app/widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -16,8 +17,8 @@ class AuthService {
       builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
         if (snapshot.hasData) {
           if(FirebaseAuth.instance.currentUser!.metadata.creationTime==FirebaseAuth.instance.currentUser!.metadata.lastSignInTime){
-            FirebaseAuth _auth = FirebaseAuth.instance;
-            addUserDataToFirestore(_auth.currentUser!.displayName,_auth.currentUser!.email );
+            FirebaseAuth auth = FirebaseAuth.instance;
+            addUserDataToFirestore(auth.currentUser!.displayName,auth.currentUser!.email );
           }
           return const ChatList();
         } else {
@@ -55,14 +56,19 @@ class AuthService {
     }
   }
 
-  signOut() async {
+  signOut(BuildContext context) async {
     if (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS) {
       await GoogleSignIn().signOut();
     }
     await FirebaseAuth.instance.signOut();
+    showSnackBar(context, "User is signed out.");
     print("User is signed out.");
+
   }
+
+
+
 
   createUserWithEmailAndPassword(String name, String emailAddress,
       String password, BuildContext context) async {
@@ -99,11 +105,11 @@ class AuthService {
   }
 
   addUserDataToFirestore(String? name, String? email) async {
-    FirebaseAuth _auth = FirebaseAuth.instance;
-    FirebaseFirestore _firestore = FirebaseFirestore.instance;
-    await _firestore
+    FirebaseAuth auth = FirebaseAuth.instance;
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    await firestore
         .collection("users")
-        .doc(_auth.currentUser?.uid)
-        .set({"name": name, "email": email, "status": "unavailable","uId":_auth.currentUser!.uid});
+        .doc(auth.currentUser?.uid)
+        .set({"name": name, "email": email, "status": "unavailable","uId":auth.currentUser!.uid});
   }
 }
