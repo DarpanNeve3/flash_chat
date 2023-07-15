@@ -115,7 +115,7 @@ class LoginPage extends StatelessWidget {
             ),
             GestureDetector(
               onTap: () {
-                AuthService().signInWithGoogle();
+                AuthService().signInWithGoogle(context);
               },
               child: Container(
                 width: 202,

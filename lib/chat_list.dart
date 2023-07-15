@@ -162,8 +162,8 @@ class _ChatListState extends State<ChatList> with WidgetsBindingObserver {
                           trailing: ElevatedButton(
                             onPressed: () {
                               setState(() {
-                                roomId = chatRoomId(_user?.displayName,
-                                    allUsers[index]["name"]);
+                                roomId = chatRoomId(_user?.uid,
+                                    allUsers[index]["uId"]);
                               });
                               Navigator.of(context).push(
                                 MaterialPageRoute(

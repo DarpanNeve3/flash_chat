@@ -16,9 +16,11 @@ class AuthService {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
         if (snapshot.hasData) {
-          if(FirebaseAuth.instance.currentUser!.metadata.creationTime==FirebaseAuth.instance.currentUser!.metadata.lastSignInTime){
+          if (FirebaseAuth.instance.currentUser!.metadata.creationTime ==
+              FirebaseAuth.instance.currentUser!.metadata.lastSignInTime) {
             FirebaseAuth auth = FirebaseAuth.instance;
-            addUserDataToFirestore(auth.currentUser!.displayName,auth.currentUser!.email );
+            addUserDataToFirestore(
+                auth.currentUser!.displayName, auth.currentUser!.email);
           }
           return const ChatList();
         } else {
@@ -28,53 +30,53 @@ class AuthService {
     );
   }
 
-  signInWithGoogle() async {
-    if (defaultTargetPlatform == TargetPlatform.android ||
-        defaultTargetPlatform == TargetPlatform.iOS) {
-      // Trigger the authentication flow
-
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication? googleAuth =
-          await googleUser?.authentication;
-
-      // Create a new credential
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
-      );
-      // Once signed in, return the UserCredential
-      return await FirebaseAuth.instance.signInWithCredential(credential);
-    } else {
+  signInWithGoogle(BuildContext context) async {
+    if (kIsWeb) {
       GoogleAuthProvider googleProvider = GoogleAuthProvider();
-
       googleProvider
           .addScope('https://www.googleapis.com/auth/contacts.readonly');
       googleProvider.setCustomParameters({'login_hint': 'user@example.com'});
       return await FirebaseAuth.instance.signInWithPopup(googleProvider);
     }
-  }
+    else if(defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS){
+          // Trigger the authentication flow
 
+          final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+          // Obtain the auth details from the request
+          final GoogleSignInAuthentication? googleAuth =
+              await googleUser?.authentication;
+
+          // Create a new credential
+          final credential = GoogleAuthProvider.credential(
+            accessToken: googleAuth?.accessToken,
+            idToken: googleAuth?.idToken,
+          );
+          // Once signed in, return the UserCredential
+          return await FirebaseAuth.instance.signInWithCredential(credential);
+    }
+    else{
+      showSnackBar(context, "Platform do not support login");
+    }
+
+  }
   signOut(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
     if (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS) {
       await GoogleSignIn().signOut();
     }
-    await FirebaseAuth.instance.signOut();
     showSnackBar(context, "User is signed out.");
     print("User is signed out.");
-
   }
-
-
 
 
   createUserWithEmailAndPassword(String name, String emailAddress,
       String password, BuildContext context) async {
     try {
       final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailAddress,
         password: password,
       );
@@ -110,6 +112,11 @@ class AuthService {
     await firestore
         .collection("users")
         .doc(auth.currentUser?.uid)
-        .set({"name": name, "email": email, "status": "unavailable","uId":auth.currentUser!.uid});
+        .set({
+      "name": name,
+      "email": email,
+      "status": "unavailable",
+      "uId": auth.currentUser!.uid
+    });
   }
 }

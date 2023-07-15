@@ -32,29 +32,30 @@ class IndividualChat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text(userMap['name']),
-        ),
-        body: StreamBuilder<QuerySnapshot>(
-          stream: _firestore
-              .collection('chatroom')
-              .doc(roomId)
-              .collection('chats')
-              .orderBy("time", descending: false)
-              .snapshots(),
-          builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if (snapshot.data != null) {
-              return ListView.builder(
-                itemCount: snapshot.data!.docs.length,
-                itemBuilder: (BuildContext context, int index) {
-                  if (snapshot.data!.docs[index].data() == null) {
-                    print("data is null");
-                    return Container();
-                  }
-                  print("data is present");
-                  return Container(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(userMap['name']),
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _firestore
+            .collection('chatroom')
+            .doc(roomId)
+            .collection('chats')
+            .orderBy("time", descending: false)
+            .snapshots(),
+        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.data != null) {
+            return ListView.builder(
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (BuildContext context, int index) {
+                if (snapshot.data!.docs[index].data() == null) {
+                  print("data is null");
+                  return Container();
+                }
+                print("data is present");
+                return GestureDetector(
+                  onLongPress:  deleteMessage(snapshot.data!.docs[index]['time']),
+                  child: Container(
                     width: 300,
                     alignment: snapshot.data!.docs[index]["sendBy"] ==
                             _auth.currentUser!.displayName
@@ -63,60 +64,70 @@ class IndividualChat extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           vertical: 10, horizontal: 14),
-                      margin: const EdgeInsets.symmetric(
-                          vertical: 5, horizontal: 8),
+                      margin:
+                          const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(15),
                         color: Colors.blue,
                       ),
-                      child: Text(
-                        snapshot.data!.docs[index]['message'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              );
-            } else {
-              return Container();
-            }
-          },
-        ),
-        bottomNavigationBar: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: BottomAppBar(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      onSubmitted: (value) {
-                        sendMessage();
-                      },
-                      controller: _message,
-                      decoration: const InputDecoration(
-                        hintText: 'Type a message',
-                        border: InputBorder.none,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            snapshot.data!.docs[index]['sendBy'],
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            snapshot.data!.docs[index]['message'],
+                            textAlign: TextAlign.left ,
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
+                );
+              },
+            );
+          } else {
+            return Container();
+          }
+        },
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: BottomAppBar(
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    onSubmitted: (value) {
                       sendMessage();
                     },
-                    child: const Text('Send'),
+                    controller: _message,
+                    decoration: const InputDecoration(
+                      hintText: 'Type a message',
+                      border: InputBorder.none,
+                    ),
                   ),
-                ],
-              ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    sendMessage();
+                  },
+                  child: const Text('Send'),
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
   }
+}
+
+deleteMessage(String time) {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 }
