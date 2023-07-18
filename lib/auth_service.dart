@@ -6,20 +6,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'auth/login_page.dart';
-
-late String userName, userPhoto;
-
 class AuthService {
   handleAuthState() {
-    return StreamBuilder(
+    return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
-        FirebaseAuth auth = FirebaseAuth.instance;
-        if (snapshot.hasData) {
-          if (FirebaseAuth.instance.currentUser!.metadata.creationTime ==
-              FirebaseAuth.instance.currentUser!.metadata.lastSignInTime && auth.currentUser!.displayName!=null) {
-            addUserDataToFirestore();
-          }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Loading state while waiting for the auth state to be determined
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasData ) {
           return const ChatList();
         } else {
           return const LoginPage();
@@ -35,85 +31,79 @@ class AuthService {
           .addScope('https://www.googleapis.com/auth/contacts.readonly');
       googleProvider.setCustomParameters({'login_hint': 'user@example.com'});
       return await FirebaseAuth.instance.signInWithPopup(googleProvider);
-    }
-    else if(defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS){
-          // Trigger the authentication flow
+    } else if (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS) {
+      // Trigger the authentication flow
 
-          final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-          // Obtain the auth details from the request
-          final GoogleSignInAuthentication? googleAuth =
-              await googleUser?.authentication;
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication? googleAuth =
+          await googleUser?.authentication;
 
-          // Create a new credential
-          final credential = GoogleAuthProvider.credential(
-            accessToken: googleAuth?.accessToken,
-            idToken: googleAuth?.idToken,
-          );
-          // Once signed in, return the UserCredential
-          return await FirebaseAuth.instance.signInWithCredential(credential);
-    }
-    else{
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth?.accessToken,
+        idToken: googleAuth?.idToken,
+      );
+      // Once signed in, return the UserCredential
+      return await FirebaseAuth.instance.signInWithCredential(credential);
+    } else {
       showSnackBar(context, "Platform do not support login");
     }
-
   }
+
   signOut(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     if (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS) {
       await GoogleSignIn().signOut();
     }
-    showSnackBar(context, "User is signed out.");
-    print("User is signed out.");
+    if (context.mounted) {
+      showSnackBar(context, "User is signed out.");
+    }
   }
 
-
-  createUserWithEmailAndPassword(String name, String emailAddress,
-      String password, BuildContext context) async {
+  createUserWithEmailAndPassword(
+    String name,
+    String emailAddress,
+    String password,
+    BuildContext context,
+  ) async {
     try {
       final userCredential =
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailAddress,
         password: password,
       );
       FirebaseAuth auth = FirebaseAuth.instance;
-      await auth.currentUser!.updateDisplayName(name);
-      print(auth.currentUser!.displayName);
 
-      signInWithEmailAndPassword(emailAddress, password);
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        print('The password provided is too weak.');
-      } else if (e.code == 'email-already-in-use') {
-        print('The account already exists for that email.');
+      // Update the display name
+      await auth.currentUser!.updateDisplayName(name);
+      if (context.mounted) {
+        await signInWithEmailAndPassword(emailAddress, password, context);
+        await addUserDataToFirestore();
       }
+    } on FirebaseAuthException catch (e) {
+      showSnackBar(context, e.code);
     } catch (e) {
-      print(e);
+      showSnackBar(context, e.toString());
     }
   }
 
-  signInWithEmailAndPassword(String emailAddress, String password) async {
+  signInWithEmailAndPassword(String emailAddress, String password,BuildContext context) async {
     try {
       final credential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: emailAddress, password: password);
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print('No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
-      }
+      showSnackBar(context, e.code);
     }
   }
 
   addUserDataToFirestore() async {
     FirebaseAuth auth = FirebaseAuth.instance;
     FirebaseFirestore firestore = FirebaseFirestore.instance;
-    await firestore
-        .collection("users")
-        .doc(auth.currentUser?.uid)
-        .set({
+    await firestore.collection("users").doc(auth.currentUser?.uid).set({
       "name": auth.currentUser!.displayName,
       "email": auth.currentUser!.email,
       "status": "unavailable",
