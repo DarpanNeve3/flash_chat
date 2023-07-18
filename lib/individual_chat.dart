@@ -54,7 +54,6 @@ class IndividualChat extends StatelessWidget {
                 }
                 print("data is present");
                 return GestureDetector(
-                  onLongPress:  deleteMessage(snapshot.data!.docs[index]['time']),
                   child: Container(
                     width: 300,
                     alignment: snapshot.data!.docs[index]["sendBy"] ==

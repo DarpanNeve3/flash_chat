@@ -100,8 +100,9 @@ class RegistrationPage extends StatelessWidget {
 
                       GestureDetector(
                         onTap: () async {
-                          if(_pass.text==_confirmPass.text ){
+                          if(_pass.text==_confirmPass.text && _name.text.isNotEmpty && _email.text.isNotEmpty ){
                             await AuthService().createUserWithEmailAndPassword(_name.text,_email.text,_pass.text,context);
+                            print(_name.text);
                             Navigator.pop(context);
                           }
                           else{
@@ -200,6 +201,7 @@ class _PasswordButton2State extends State<PasswordButton2> {
   bool obsecureText = true;
   @override
   void dispose() {
+    _name.text="";
     _email.text="";
     _pass.text="";
     _confirmPass.text="";

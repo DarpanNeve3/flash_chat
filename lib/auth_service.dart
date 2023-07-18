@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
 import 'auth/login_page.dart';
 
 late String userName, userPhoto;
@@ -15,12 +14,11 @@ class AuthService {
     return StreamBuilder(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
+        FirebaseAuth auth = FirebaseAuth.instance;
         if (snapshot.hasData) {
           if (FirebaseAuth.instance.currentUser!.metadata.creationTime ==
-              FirebaseAuth.instance.currentUser!.metadata.lastSignInTime) {
-            FirebaseAuth auth = FirebaseAuth.instance;
-            addUserDataToFirestore(
-                auth.currentUser!.displayName, auth.currentUser!.email);
+              FirebaseAuth.instance.currentUser!.metadata.lastSignInTime && auth.currentUser!.displayName!=null) {
+            addUserDataToFirestore();
           }
           return const ChatList();
         } else {
@@ -75,11 +73,14 @@ class AuthService {
   createUserWithEmailAndPassword(String name, String emailAddress,
       String password, BuildContext context) async {
     try {
-      final credential =
+      final userCredential =
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailAddress,
         password: password,
       );
+      FirebaseAuth auth = FirebaseAuth.instance;
+      await auth.currentUser!.updateDisplayName(name);
+      print(auth.currentUser!.displayName);
 
       signInWithEmailAndPassword(emailAddress, password);
     } on FirebaseAuthException catch (e) {
@@ -106,15 +107,15 @@ class AuthService {
     }
   }
 
-  addUserDataToFirestore(String? name, String? email) async {
+  addUserDataToFirestore() async {
     FirebaseAuth auth = FirebaseAuth.instance;
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     await firestore
         .collection("users")
         .doc(auth.currentUser?.uid)
         .set({
-      "name": name,
-      "email": email,
+      "name": auth.currentUser!.displayName,
+      "email": auth.currentUser!.email,
       "status": "unavailable",
       "uId": auth.currentUser!.uid
     });

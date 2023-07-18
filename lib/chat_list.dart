@@ -29,14 +29,10 @@ class _ChatListState extends State<ChatList> with WidgetsBindingObserver {
   }
 
   @override
-  void dispose() async{
+  void dispose(){
     // TODO: implement dispose
+setStatus("offline");
     WidgetsBinding.instance.removeObserver(this);
-    if (_user!=null) {
-      await setStatus("dispose");
-    }
-    print("dispose is working");
-
     super.dispose();
   }
   @override
