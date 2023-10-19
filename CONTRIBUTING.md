@@ -12,7 +12,7 @@
 - Clone on your local machine
 
 ```terminal
-git clone https://github.com/your-username/animated-components.git
+git clone git@github.com:your-uer-name/flash_chat.git
 ```
 
 - Navigate to the project directory.
@@ -49,10 +49,10 @@ git push origin my-new-branch
 
 ## Avoid Conflicts {Syncing your fork}
 
-An easy way to avoid conflicts is to add an 'upstream' for your git repo, as other PR's may be merged while you're working on your branch/fork.
+An easy way to avoid conflicts is to add an 'upstream' for your git repo, as other PRs may be merged while you're working on your branch/fork.
 
 ```terminal
-git remote add upstream https://github.com/pccoe-acm-hacktoberfest-2023/animated-components.git
+git remote add upstream git@github.com:DarpanNeve/flash_chat.git
 ```
 
 You can verify that the new remote has been added by typing
